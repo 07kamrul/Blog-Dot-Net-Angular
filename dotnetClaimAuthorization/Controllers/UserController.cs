@@ -6,13 +6,15 @@ using System.Text;
 using System.Threading.Tasks;
 using dotnetClaimAuthorization.Data.Entities;
 using dotnetClaimAuthorization.Models;
-using dotnetClaimAuthorization.Models.DTO;
+using dotnetClaimAuthorization.Models.ResponseModel;
 using dotnetClaimAuthorization.Models.RequestModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace dotnetClaimAuthorization.Controllers
 {
@@ -61,12 +63,13 @@ namespace dotnetClaimAuthorization.Controllers
             }
         }
 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("GetAllUser")]
         public async Task<object> GetAllUser()
         {
             try
             {
-                var users = _userManager.Users.Select(x=> new UserDTO(x.FullName,x.Email, x.UserName, x.DateCreated));
+                var users = _userManager.Users.Select(x=> new UserResponseModel(x.FullName,x.Email, x.UserName, x.DateCreated));
                 return await Task.FromResult(users);
 
             }
@@ -75,8 +78,9 @@ namespace dotnetClaimAuthorization.Controllers
                 return await Task.FromResult(ex.Message);
             }
         }
-        
 
+
+        [AllowAnonymous]
         [HttpPost("Login")]
         public async Task<object> Login([FromBody] LoginRequestModel model)
         {
@@ -89,7 +93,11 @@ namespace dotnetClaimAuthorization.Controllers
 
                     if (result.Succeeded)
                     {
-                        return await Task.FromResult("Login successfully.");
+                        var appUser = await _userManager.FindByEmailAsync(model.Email);
+                        var user = new UserResponseModel(appUser.FullName, appUser.Email, appUser.UserName, appUser.DateCreated);
+                        user.Token = GenerateToken(appUser);
+
+                        return await Task.FromResult(user);
                     }
                 }
                 return await Task.FromResult("Invalid Email or Password.");

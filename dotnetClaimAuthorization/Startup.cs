@@ -50,6 +50,7 @@ namespace dotnetClaimAuthorization
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ValidateIssuer = false,
+                    ValidateAudience = false,
                     RequireExpirationTime = true,
                 };
             });

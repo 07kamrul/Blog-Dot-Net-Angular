@@ -45,13 +45,17 @@ namespace dotnetClaimAuthorization
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(Options =>
             {
                 var key = Encoding.ASCII.GetBytes(Configuration["JWTConfig:Key"]);
+                var issuer = Configuration["JWTConfig:Issuer"];
+                var audience = Configuration["JWTConfig:Audience"];
 
                 Options.TokenValidationParameters = new TokenValidationParameters(){
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     RequireExpirationTime = true,
+                    ValidIssuer = issuer,
+                    ValidAudience = audience,
                 };
             });
 

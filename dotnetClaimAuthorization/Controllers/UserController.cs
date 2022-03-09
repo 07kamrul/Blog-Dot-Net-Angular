@@ -1,13 +1,18 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
-using dotnetClaimAuthorization.BindingModel;
 using dotnetClaimAuthorization.Data.Entities;
-using dotnetClaimAuthorization.DTO;
-using dotnetClaimAuthorization.RequestModel;
+using dotnetClaimAuthorization.Models;
+using dotnetClaimAuthorization.Models.DTO;
+using dotnetClaimAuthorization.Models.RequestModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace dotnetClaimAuthorization.Controllers
 {
@@ -18,11 +23,14 @@ namespace dotnetClaimAuthorization.Controllers
         private readonly ILogger<UserController> _logger;
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
-        public UserController(ILogger<UserController> logger,UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
+        private readonly JWTConfig _jwtConfig;
+
+        public UserController(ILogger<UserController> logger,UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IOptions<JWTConfig> jwtConfig)
         {
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
+            _jwtConfig = jwtConfig.Value;
             
         }
 
@@ -90,6 +98,26 @@ namespace dotnetClaimAuthorization.Controllers
             {
                 return Task.FromResult(ex.Message);
             }
+        }
+
+        private string GenerateToken(AppUser user)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_jwtConfig.Key);
+            var tokenDescription = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(JwtRegisteredClaimNames.NameId, user.Id),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                }),
+                Expires = DateTime.UtcNow.AddHours(12),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = jwtTokenHandler.CreateToken(tokenDescription);
+            
+            return jwtTokenHandler.WriteToken(token);
         }
     }
 }

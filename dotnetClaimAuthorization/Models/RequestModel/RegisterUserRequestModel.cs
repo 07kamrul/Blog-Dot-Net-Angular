@@ -1,5 +1,5 @@
-namespace dotnetClaimAuthorization.BindingModel
-{
+namespace dotnetClaimAuthorization.Models.RequestModel
+    {
     public class RegisterUserRequestModel
     {
         public string FullName { get; set; }

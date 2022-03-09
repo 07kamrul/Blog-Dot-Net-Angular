@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace dotnetClaimAuthorization.DTO
+namespace dotnetClaimAuthorization.Models.DTO
 {
     public class UserDTO
     {

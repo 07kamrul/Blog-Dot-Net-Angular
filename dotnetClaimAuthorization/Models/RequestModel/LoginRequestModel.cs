@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace dotnetClaimAuthorization.RequestModel
+namespace dotnetClaimAuthorization.Models.RequestModel
 {
     public class LoginRequestModel
     {

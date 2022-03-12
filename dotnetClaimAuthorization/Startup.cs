@@ -24,6 +24,7 @@ namespace dotnetClaimAuthorization
 {
     public class Startup
     {
+        private readonly string _loginOrigin = "_loginOrigin";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -59,6 +60,15 @@ namespace dotnetClaimAuthorization
                 };
             });
 
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy(_loginOrigin, builder =>
+                {
+                    builder.AllowAnyOrigin();
+                    builder.AllowAnyMethod();
+                    builder.AllowAnyHeader();
+                });
+            });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -79,6 +89,8 @@ namespace dotnetClaimAuthorization
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors(_loginOrigin);
 
             app.UseAuthentication();
 
